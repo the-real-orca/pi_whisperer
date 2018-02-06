@@ -5,4 +5,11 @@ rem ---------------------------------------------------------------------
 del *.pyc
 C:\Python27\python.exe py2exe_setup.py py2exe
 rmdir /S /Q build
+move dist dist32
+pause
+
+del *.pyc
+C:\Python27_64bit\python.exe py2exe_setup.py py2exe
+rmdir /S /Q build
+move dist dist64
 pause
