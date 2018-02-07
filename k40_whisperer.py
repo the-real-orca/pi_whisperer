@@ -2023,6 +2023,8 @@ class Application(Frame):
             self.Quit_Click(None)
 
     def menu_View_Mirror_Refresh_Callback(self, varName, index, mode):
+        config["mirror"] = self.mirror.get()
+        config["rotate"] = self.rotate.get()
         self.core.RengData.reset_path()
         self.SCALE = 0
         self.menu_View_Refresh()
