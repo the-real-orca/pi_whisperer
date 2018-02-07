@@ -88,7 +88,6 @@ class Application(Frame):
         self.master = master
         self.core = WhispererCore(update_gui=self.update_gui)
         self.createWidgets()
-        print("config", config) #TODO
         self.core.config = config
 
     def resetPath(self):
@@ -784,7 +783,6 @@ class Application(Frame):
 
     def XY_in_bounds(self,dx_inches,dy_inches):
         MINX,MAXX,MINY,MAXY = self.core.getWorkspace()
-        print("getWorkspace", MINX,MAXX,MINY,MAXY)
 
         if self.inputCSYS.get() and self.RengData.image == None:
             xmin,xmax,ymin,ymax = 0.0,0.0,0.0,0.0
@@ -1786,7 +1784,6 @@ class Application(Frame):
             dx_inches = -dx_inches
 
         Xnew,Ynew = self.XY_in_bounds(dx_inches,dy_inches)
-        print("XY_in_bounds", dx_inches, dy_inches, Xnew, Ynew) # TODO
         dxmils = (Xnew - self.laserX)*1000.0
         dymils = (Ynew - self.laserY)*1000.0
         

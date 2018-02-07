@@ -165,7 +165,6 @@ class WhispererCore():
         self.stop_flag = [False]
         self.update_gui = update_gui if update_gui else self.NOP
         self.config = config
-        print("config init", config)
 
     def NOP(self, str):
         # no operation
@@ -654,7 +653,6 @@ class WhispererCore():
         return coords_scale,scaled_startx,scaled_starty
   
     def send_data(self,operation_type=None):
-        print("config", self.config)    # TODO
         if self.k40 == None:
             raise StandardError("Laser Cutter is not Initialized...")
         
@@ -662,7 +660,7 @@ class WhispererCore():
             if self.config.get("inputCSYS") and self.RengData.image == None:
                 xmin,xmax,ymin,ymax = 0.0,0.0,0.0,0.0
             else:
-                xmin,xmax,ymin,ymax = self.Get_Design_Bounds() # TODO
+                xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
 
             startx = xmin
             starty = ymax
@@ -863,7 +861,6 @@ class WhispererCore():
             self.k40.unlock_rail()
 
     def rapid_move(self,dxmils,dymils):
-        print("rapid move", dxmils, dymils) # TODO
         if self.k40 != None:
             scaleX = float(self.config.get("LaserXscale", 1))
             scaleY = float(self.config.get("LaserYscale", 1))
