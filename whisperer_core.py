@@ -179,9 +179,23 @@ class WhispererCore():
         self.Design_bounds = (0,0,0,0)
         self.pos_offset=[0.0,0.0]
         
-################################################################################
+    ################################################################################
     def getWorkspace(self):
-        return (0.0, self.config.get("LaserXsize", 0.0), self.config.get("LaserYsize", 0.0), 0.0)
+        return (0.0, float(self.config.get("LaserXsize", 0.0)), -float(self.config.get("LaserYsize", 0.0)), 0.0)
+
+    def LASER_Size(self):
+        xmin, xmax, ymin, ymax = self.getWorkspace()
+        return (abs(xmax-xmin), abs(ymax-ymin))
+            
+    def Get_Design_Bounds(self):
+        if self.config.get("rotate"):
+            ymin =  self.Design_bounds[0]
+            ymax =  self.Design_bounds[1]
+            xmin = -self.Design_bounds[3]
+            xmax = -self.Design_bounds[2]
+        else:
+            xmin,xmax,ymin,ymax = self.Design_bounds
+        return (xmin,xmax,ymin,ymax)           
 
 
     ################################################################################
@@ -621,8 +635,8 @@ class WhispererCore():
 
     def scale_vector_coords(self,coords,startx,starty):
         coords_scale=[]
-        scaleX = self.config.get("LaserXscale", 1)
-        scaleY = self.config.get("LaserYscale", 1)
+        scaleX = float(self.config.get("LaserXscale", 1))
+        scaleY = float(self.config.get("LaserYscale", 1))
         if scaleX != 1.0 or scaleY != 1.0:
             for i in range(len(coords)):
                 coords_scale.append(coords[i][:])
@@ -849,9 +863,10 @@ class WhispererCore():
             self.k40.unlock_rail()
 
     def rapid_move(self,dxmils,dymils):
+        print("rapid move", dxmils, dymils) # TODO
         if self.k40 != None:
             scaleX = float(self.config.get("LaserXscale", 1))
-            scaleY = float(self.config.get("LaserXscale", 1))
+            scaleY = float(self.config.get("LaserYscale", 1))
             dxmils = int(round(dxmils * scaleX))
             dymils = int(round(dymils * scaleY))
             self.k40.rapid_move(dxmils,dymils)

@@ -31,7 +31,7 @@ from g_code_library import G_Code_Rip
 from whisperer_core import *
 
 import traceback
-DEBUG = False
+DEBUG = True # TODO
 
 VERSION = sys.version_info[0]
 LOAD_MSG = ""
@@ -88,17 +88,14 @@ class Application(Frame):
         self.master = master
         self.core = WhispererCore(update_gui=self.update_gui)
         self.createWidgets()
+        print("config", config) #TODO
         self.core.config = config
 
     def resetPath(self):
         self.core.resetPath()
         self.SCALE = 1
-        self.Design_bounds = (0,0,0,0)
         self.UI_image = None
-        #if self.HomeUR.get():
         self.move_head_window_temporary([0.0,0.0])
-        #else:
-        #    self.move_head_window_temporary([0.0,0.0])
             
         self.pos_offset=[0.0,0.0]
         
@@ -298,6 +295,37 @@ class Application(Frame):
         ##########################################################################
         ###                     END INITILIZING VARIABLES                      ###
         ##########################################################################
+
+        # copy to global config
+        config["inputCSYS"] = self.inputCSYS.get()
+        config["HomeUR"] = self.HomeUR.get()
+        config["engraveUP"] = self.engraveUP.get()
+        config["init_home"] = self.init_home.get()
+        config["pre_pr_crc"] = self.pre_pr_crc.get()
+        config["inside_first"] = self.inside_first.get()
+
+        config["Reng_feed"] = self.Reng_feed.get()
+        config["Veng_feed"] = self.Veng_feed.get()
+        config["Vcut_feed"] = self.Vcut_feed.get()
+        config["Reng_passes"] = self.Reng_passes.get()
+        config["Veng_passes"] = self.Veng_passes.get()
+        config["Vcut_passes"] = self.Vcut_passes.get()
+        config["Gcde_passes"] = self.Gcde_passes.get()
+
+        config["jog_step"] = self.jog_step.get()
+        config["rast_step"] = self.rast_step.get()
+
+        config["board_name"] = self.board_name.get()
+        config["units"] = self.units.get()
+        config["t_timeout"] = self.t_timeout.get()
+        config["n_timeouts"] = self.n_timeouts.get()
+
+        config["LaserXsize"] = self.LaserXsize.get()
+        config["LaserYsize"] = self.LaserYsize.get()
+        
+        config["LaserXscale"] = self.LaserXscale.get()
+        config["LaserYscale"] = self.LaserYscale.get()
+
 
         # make a Status Bar
         self.statusbar = Label(self.master, textvariable=self.statusMessage, \
@@ -756,11 +784,12 @@ class Application(Frame):
 
     def XY_in_bounds(self,dx_inches,dy_inches):
         MINX,MAXX,MINY,MAXY = self.core.getWorkspace()
+        print("getWorkspace", MINX,MAXX,MINY,MAXY)
 
         if self.inputCSYS.get() and self.RengData.image == None:
             xmin,xmax,ymin,ymax = 0.0,0.0,0.0,0.0
         else:
-            xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+            xmin,xmax,ymin,ymax = self.core.Get_Design_Bounds()
         
         X = self.laserX + dx_inches
         X = min(MAXX-(xmax-xmin),X)
@@ -1645,19 +1674,9 @@ class Application(Frame):
             fout.close
             self.statusMessage.set("File Saved: %s" %(filename))
             self.statusbar.configure( bg = 'white' )
-        
-    def Get_Design_Bounds(self):
-        if self.rotate.get():
-            ymin =  self.core.Design_bounds[0]
-            ymax =  self.core.Design_bounds[1]
-            xmin = -self.core.Design_bounds[3]
-            xmax = -self.core.Design_bounds[2]
-        else:
-            xmin,xmax,ymin,ymax = self.core.Design_bounds
-        return (xmin,xmax,ymin,ymax)
     
     def Move_UL(self,dummy=None):
-        xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+        xmin,xmax,ymin,ymax = self.core.Get_Design_Bounds()
         if self.HomeUR.get():
             Xnew = self.laserX + (xmax-xmin)
             DX = round((xmax-xmin)*1000.0)
@@ -1672,7 +1691,7 @@ class Application(Frame):
             pass
 
     def Move_UR(self,dummy=None):
-        xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+        xmin,xmax,ymin,ymax = self.core.Get_Design_Bounds()
         if self.HomeUR.get():
             Xnew = self.laserX
             DX = 0
@@ -1687,7 +1706,7 @@ class Application(Frame):
             pass
     
     def Move_LR(self,dummy=None):
-        xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+        xmin,xmax,ymin,ymax = self.core.Get_Design_Bounds()
         if self.HomeUR.get():
             Xnew = self.laserX
             DX = 0
@@ -1704,7 +1723,7 @@ class Application(Frame):
             pass
     
     def Move_LL(self,dummy=None):
-        xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+        xmin,xmax,ymin,ymax = self.core.Get_Design_Bounds()
         if self.HomeUR.get():
             Xnew = self.laserX + (xmax-xmin)
             DX = round((xmax-xmin)*1000.0)
@@ -1721,7 +1740,7 @@ class Application(Frame):
             pass
 
     def Move_CC(self,dummy=None):
-        xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+        xmin,xmax,ymin,ymax = self.core.Get_Design_Bounds()
         if self.HomeUR.get():
             Xnew = self.laserX + (xmax-xmin)/2.0 
             DX = round((xmax-xmin)/2.0*1000.0)
@@ -1767,6 +1786,7 @@ class Application(Frame):
             dx_inches = -dx_inches
 
         Xnew,Ynew = self.XY_in_bounds(dx_inches,dy_inches)
+        print("XY_in_bounds", dx_inches, dy_inches, Xnew, Ynew) # TODO
         dxmils = (Xnew - self.laserX)*1000.0
         dymils = (Ynew - self.laserY)*1000.0
         
@@ -2026,7 +2046,7 @@ class Application(Frame):
         dummy_event.widget=self.master
         self.Master_Configure(dummy_event,1)
         self.Plot_Data()
-        xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+        xmin,xmax,ymin,ymax = self.core.Get_Design_Bounds()
         W = xmax-xmin
         H = ymax-ymin
 
@@ -2408,7 +2428,7 @@ class Application(Frame):
         if self.inputCSYS.get() and self.core.RengData.image == None:
             xmin,xmax,ymin,ymax = 0.0,0.0,0.0,0.0
         else:
-            xmin,xmax,ymin,ymax = self.Get_Design_Bounds()           
+            xmin,xmax,ymin,ymax = self.core.Get_Design_Bounds()           
                 
         if (self.HomeUR.get()):
             XlineShift = maxx - self.laserX - (xmax-xmin)
@@ -2486,8 +2506,11 @@ class Application(Frame):
             scale=1
 
             plot_coords = self.core.VengData.ecoords
-            if self.mirror.get() or self.rotate.get():
-                plot_coords = self.mirror_rotate_vector_coords(plot_coords)
+            if self.mirror.get():
+                plot_coords = self.core.mirror_vector_coords(plot_coords)
+            if self.rotate.get():
+                plot_coords = self.core.rotate_vector_coords(plot_coords)            
+
                 
             for line in plot_coords:
                 XY    = line
@@ -2509,8 +2532,10 @@ class Application(Frame):
             scale=1
 
             plot_coords = self.core.VcutData.ecoords
-            if self.mirror.get() or self.rotate.get():
-                    plot_coords = self.mirror_rotate_vector_coords(plot_coords)
+            if self.mirror.get():
+                plot_coords = self.core.mirror_vector_coords(plot_coords)
+            if self.rotate.get():
+                plot_coords = self.core.rotate_vector_coords(plot_coords)            
                 
             for line in plot_coords:
                 XY    = line
@@ -2535,8 +2560,10 @@ class Application(Frame):
             scale=1
 
             plot_coords = self.core.GcodeData.ecoords
-            if self.mirror.get() or self.rotate.get():
-                    plot_coords = self.mirror_rotate_vector_coords(plot_coords)
+            if self.mirror.get():
+                plot_coords = self.core.mirror_vector_coords(plot_coords)
+            if self.rotate.get():
+                plot_coords = self.core.rotate_vector_coords(plot_coords)            
                 
             for line in plot_coords:
                 XY    = line
@@ -2563,7 +2590,7 @@ class Application(Frame):
     def Plot_Raster(self, XX, YY, Xleft, Ytop, PlotScale, im):
         if (self.HomeUR.get()):
             maxx = float(self.LaserXsize.get()) / self.units_scale
-            xmin,xmax,ymin,ymax = self.Get_Design_Bounds()
+            xmin,xmax,ymin,ymax = self.core.Get_Design_Bounds()
             xplt = Xleft + ( maxx-XX-(xmax-xmin) )/PlotScale
         else:
             xplt = Xleft +  XX/PlotScale
